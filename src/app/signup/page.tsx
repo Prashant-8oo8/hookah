@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "@/lib/firebase";
+import { auth, db, GoogleAuthProvider, signInWithPopup } from "@/lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,52 +69,37 @@ function SignupContent() {
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/";
 
-  // ── Handle Google redirect result on page load ──────────────────────
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) return; // no redirect in progress
+  // Removed redirect logic as we are switching to popup flow
 
-        const user = result.user;
-
-        // Save to Firestore only if first time
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid: user.uid,
-            name: user.displayName,
-            email: user.email,
-            photo: user.photoURL,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        toast.success("Account ready! Welcome to Haze & Co.");
-
-        // Redirect after Google signup using the unified redirect state
-        router.push(redirect);
-      })
-      .catch((err: any) => {
-        console.error("Google redirect error:", err);
-        const message =
-          AUTH_ERROR_MESSAGES[err?.code] ?? "Something went wrong. Try again.";
-        toast.error(message);
-      });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /** Google Sign-In — redirect flow (no popup) */
+  /** Google Sign-In — popup flow */
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-      // Page will reload automatically — result caught in useEffect above
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Save to Firestore only if first time
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      toast.success("Account ready! Welcome to Haze & Co.");
+      router.push(redirect);
     } catch (err: any) {
-      console.error("Google redirect initiation error:", err);
+      console.error("Google popup initiation error:", err);
       const message =
         AUTH_ERROR_MESSAGES[err?.code] ?? "Something went wrong. Try again.";
       toast.error(message);
+    } finally {
       setGoogleLoading(false);
     }
   };

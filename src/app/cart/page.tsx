@@ -58,6 +58,7 @@ export default function CartPage() {
                   src={item.imageUrl || "/placeholder.svg"}
                   alt={item.name}
                   fill
+                  sizes="(max-width: 768px) 20vw, 10vw"
                   className="object-cover"
                 />
               </div>

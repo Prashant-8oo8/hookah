@@ -14,6 +14,7 @@ export interface Product {
   price: number;
   category: string;
   imageUrl: string;
+  imageFileId?: string;
   stock: number;
   color?: string;
 }
@@ -40,6 +41,7 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.imageUrl || "/placeholder.svg"}
           alt={product.name}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
       </Link>

@@ -31,36 +31,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized: admin only" }, { status: 403 });
     }
 
-    // ── Upload ────────────────────────────────────────────────────────────
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    // ── Delete from ImageKit ──────────────────────────────────────────────
+    const { fileId } = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (!fileId) {
+      return NextResponse.json({ error: "No fileId provided" }, { status: 400 });
     }
 
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+    await imagekit.deleteFile(fileId);
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' }, { status: 400 });
-    }
-    if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 });
-    }
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const result = await imagekit.upload({
-      file: buffer,
-      fileName: file.name || "product-image",
-      folder: "/ecommerce-products",
-    });
-
-    return NextResponse.json({ imageUrl: result.url, fileId: result.fileId });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("[API Error] ImageKit upload error:", error);
+    console.error("[API Error] ImageKit delete error:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },
       { status: 500 }

@@ -24,14 +24,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      
-      // Check admin status
+
+      // NEXT_PUBLIC_ prefix is required for client-side access.
+      // Admin emails are not secrets — real security is enforced server-side
+      // (upload-image route validates email; verify-payment validates signature).
       const adminEmails = [
         process.env.NEXT_PUBLIC_ADMIN_EMAIL_1,
-        process.env.NEXT_PUBLIC_ADMIN_EMAIL_2
+        process.env.NEXT_PUBLIC_ADMIN_EMAIL_2,
       ].filter(Boolean);
-      
-      setIsAdmin(currentUser && currentUser.email ? adminEmails.includes(currentUser.email) : false);
+
+      setIsAdmin(
+        currentUser && currentUser.email
+          ? adminEmails.includes(currentUser.email)
+          : false
+      );
       setLoading(false);
     });
 

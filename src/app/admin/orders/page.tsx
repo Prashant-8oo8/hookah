@@ -81,7 +81,9 @@ export default function AdminOrdersPage() {
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-medium text-white">{order.userEmail}</span>
-                      <span className="text-xs text-muted-foreground mt-1 line-clamp-1 max-w-[200px]" title={order.shippingAddress}>{order.shippingAddress}</span>
+                      <span className="text-xs text-muted-foreground mt-1 line-clamp-1 max-w-[200px]" title={typeof order.shippingAddress === 'string' ? order.shippingAddress : `${order.shippingAddress?.line1 || ''}, ${order.shippingAddress?.city || ''}`}>
+                        {typeof order.shippingAddress === 'string' ? order.shippingAddress : `${order.shippingAddress?.line1 || ''}, ${order.shippingAddress?.city || ''}`}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell className="font-bold">₹{order.total.toLocaleString("en-IN")}</TableCell>

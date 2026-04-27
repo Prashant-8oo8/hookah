@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
+import { getIdToken } from "firebase/auth";
 import { Product } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -33,7 +34,25 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
     try {
+      const productToDelete = products.find(p => p.id === id);
+
       await deleteDoc(doc(db, "products", id));
+      
+      if (productToDelete?.imageFileId) {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const idToken = await getIdToken(currentUser);
+          await fetch("/api/delete-image", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ fileId: productToDelete.imageFileId }),
+          });
+        }
+      }
+
       toast.success("Product deleted successfully");
       setProducts(products.filter(p => p.id !== id));
     } catch (error) {
@@ -68,7 +87,7 @@ export default function AdminProductsPage() {
                 <TableRow key={product.id} className="hover:bg-muted/50">
                   <TableCell>
                     <div className="relative w-12 h-12 rounded overflow-hidden bg-muted">
-                      <Image src={product.imageUrl || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+                      <Image src={product.imageUrl || "/placeholder.svg"} alt={product.name} fill sizes="10vw" className="object-cover" />
                     </div>
                   </TableCell>
                   <TableCell className="font-medium text-white">{product.name}</TableCell>

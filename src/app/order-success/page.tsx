@@ -8,11 +8,11 @@ import { Loader2 } from "lucide-react";
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("id");
+  // Support both ?orderId= (new Stripe flow) and legacy ?id= param
+  const orderId = searchParams.get("orderId") || searchParams.get("id");
 
   return (
     <div className="container mx-auto px-4 py-32 text-center max-w-2xl">
-      {/* Smoke icon */}
       <div className="text-6xl mb-8">💨</div>
       <h1 className="text-4xl font-bold mb-4 tracking-tight text-primary font-serif">
         Order Confirmed! 💨
@@ -22,11 +22,14 @@ function SuccessContent() {
       </p>
       {orderId && (
         <p className="text-sm text-muted-foreground mb-2">
-          Order ID: <span className="text-foreground font-medium">#{orderId}</span>
+          Order ID:{" "}
+          <span className="text-foreground font-medium font-mono">
+            #{orderId}
+          </span>
         </p>
       )}
       <p className="text-sm text-muted-foreground mb-12">
-        We've sent a confirmation email to your registered address.
+        We&apos;ve sent a confirmation email to your registered address.
       </p>
       <Link href="/catalog">
         <Button className="font-bold h-14 px-8 text-lg w-full sm:w-auto hover:scale-105 transition-transform">
