@@ -100,6 +100,15 @@ async function handlePaymentSuccess(intent: Stripe.PaymentIntent) {
   // Extract metadata attached to the PaymentIntent
   const metadata = intent.metadata;
 
+  let parsedAddress: any = {};
+  if (metadata.shippingAddress) {
+    try {
+      parsedAddress = JSON.parse(metadata.shippingAddress);
+    } catch (e) {
+      console.error("[webhook] Failed to parse shippingAddress metadata", e);
+    }
+  }
+
   const orderData = {
     userId: metadata.userId || '',
     userEmail: metadata.userEmail || '',
@@ -109,12 +118,12 @@ async function handlePaymentSuccess(intent: Stripe.PaymentIntent) {
     status: 'confirmed',
     createdAt: new Date().toISOString(),
     shippingAddress: {
-      name: metadata.shippingName || '',
-      phone: metadata.shippingPhone || '',
-      line1: metadata.shippingLine1 || '',
-      city: metadata.shippingCity || '',
-      state: metadata.shippingState || '',
-      pincode: metadata.shippingPincode || '',
+      name: parsedAddress.name || metadata.shippingName || '',
+      phone: parsedAddress.phone || metadata.shippingPhone || '',
+      line1: parsedAddress.line1 || metadata.shippingLine1 || '',
+      city: parsedAddress.city || metadata.shippingCity || '',
+      state: parsedAddress.state || metadata.shippingState || '',
+      pincode: parsedAddress.pincode || metadata.shippingPincode || '',
     },
     items: JSON.parse(metadata.items || '[]'),
   };
